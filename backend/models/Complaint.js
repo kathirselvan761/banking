@@ -19,7 +19,7 @@ const complaintSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      default: 'General'
+      default: 'OTHER'
     },
     description: {
       type: String,
@@ -33,6 +33,10 @@ const complaintSchema = new mongoose.Schema(
       type: String,
       default: 'MEDIUM'
     },
+    severity: {
+      type: String,
+      default: 'medium'
+    },
     sentiment: {
       type: String,
       default: null
@@ -40,6 +44,22 @@ const complaintSchema = new mongoose.Schema(
     sentiment_score: {
       type: Number,
       default: null
+    },
+    keywords: {
+      type: [String],
+      default: []
+    },
+    is_recurring: {
+      type: Boolean,
+      default: false
+    },
+    similarity_score: {
+      type: Number,
+      default: 0.0
+    },
+    related_issue: {
+      type: String,
+      default: 'None'
     },
     created_at: {
       type: Date,

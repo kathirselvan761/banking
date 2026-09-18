@@ -1,29 +1,29 @@
-import React from 'react';
-import { Header } from './components/Header';
-import { Dashboard } from './pages/Dashboard';
-import { useHealthCheck } from './hooks/useHealthCheck';
+import { AppRoutes } from './routes/AppRoutes';
 
 export function App() {
-  const { backendStatus, aiStatus, refetch } = useHealthCheck();
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <Header 
-        backendStatus={backendStatus} 
-        aiStatus={aiStatus} 
-        onRefresh={refetch} 
-      />
-      <main className="flex-1">
-        <Dashboard 
-          backendStatus={backendStatus} 
-          aiStatus={aiStatus} 
-          onRefresh={refetch} 
-        />
-      </main>
-      <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-        <p>AI-Powered Early Warning & Decision Intelligence System for Banking &bull; 24-Hour Hackathon Starter</p>
-      </footer>
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-[#020617] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-white">
+        {/* Top Navigation */}
+        <Navbar />
+
+        {/* Dashboard Shell with Sidebar and Main Viewport */}
+        <div className="flex flex-1 w-full">
+          <Sidebar />
+
+          <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            <AppRoutes />
+          </main>
+        </div>
+
+        {/* Footer */}
+        <footer className="border-t border-slate-900 bg-slate-950/60 py-4 px-6 text-center text-xs text-slate-500">
+          <p>
+            Banking AI Early Warning & Delinquency Prevention System &bull; Production Prototype
+          </p>
+        </footer>
+      </div>
+    </BrowserRouter>
   );
 }
 

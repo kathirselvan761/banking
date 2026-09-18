@@ -29,6 +29,7 @@ env/
 *.h5
 *.joblib
 *.pkl
+!ai-service/saved_models/*.pkl
 models/weights/
 
 # Environment Variables & Secrets

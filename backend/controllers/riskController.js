@@ -51,6 +51,7 @@ export const getCustomerRisk = async (req, res) => {
             risk_score: prediction.risk_score,
             risk_level: prediction.risk_level,
             default_probability: prediction.default_probability,
+            future_probability: prediction.default_probability,
             trigger_event: 'BASELINE_INITIALIZATION',
             features: {}
           });
@@ -78,7 +79,10 @@ export const getCustomerRisk = async (req, res) => {
       risk: {
         risk_score: latestRisk.risk_score,
         risk_level: latestRisk.risk_level,
-        future_default_probability: latestRisk.default_probability
+        future_default_probability: latestRisk.future_probability ?? latestRisk.default_probability,
+        default_probability: latestRisk.default_probability,
+        important_risk_signals: latestRisk.important_risk_signals || [],
+        recommendations: latestRisk.recommendations || []
       }
     });
   } catch (error) {
@@ -86,6 +90,55 @@ export const getCustomerRisk = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Error retrieving customer risk'
+    });
+  }
+};
+
+/**
+ * GET /api/risk/:customerId/history
+ * Returns chronological RiskEvent snapshots for risk trend charting
+ */
+export const getCustomerRiskHistory = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const history = await RiskEvent.find({ customer_id: customerId })
+      .sort({ timestamp: 1, created_at: 1 });
+
+    return res.status(200).json({
+      success: true,
+      customer_id: customerId,
+      count: history.length,
+      data: history
+    });
+  } catch (error) {
+    logger.error(`Error in getCustomerRiskHistory: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error retrieving customer risk history'
+    });
+  }
+};
+
+/**
+ * GET /api/risk/alerts
+ * Returns all active high and critical risk alerts across customers
+ */
+export const getRiskAlerts = async (req, res) => {
+  try {
+    const alerts = await RiskEvent.find({
+      risk_level: { $in: ['HIGH', 'CRITICAL'] }
+    }).sort({ timestamp: -1, created_at: -1 }).limit(50);
+
+    return res.status(200).json({
+      success: true,
+      count: alerts.length,
+      data: alerts
+    });
+  } catch (error) {
+    logger.error(`Error in getRiskAlerts: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error retrieving risk alerts'
     });
   }
 };

@@ -4,26 +4,32 @@ import Transaction from '../models/Transaction.js';
 import Complaint from '../models/Complaint.js';
 import BankingEvent from '../models/BankingEvent.js';
 import RiskEvent from '../models/RiskEvent.js';
+import VoiceTranscript from '../models/VoiceTranscript.js';
 import { aiService } from '../services/aiService.js';
 import { logger } from '../utils/logger.js';
 
-/**
- * Realtime Simulation Controller
- */
-
-// Helper to generate quick random event IDs if uuid is not imported
+// Helper to generate quick random event IDs
 const generateId = (prefix = 'EVT') => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 /**
  * Aggregates current customer + loan + activity features for XGBoost prediction
  */
-async function buildCustomerFeatures(customerId, customer, loan) {
-  // Count complaints & negative sentiment
+export async function buildCustomerFeatures(customerId, customer, loan) {
+  // Count complaints, negative sentiment, high severity, and recurring issues
   const complaints = await Complaint.find({ customer_id: customerId });
   const complaint_count = complaints.length;
   const negative_sentiment_count = complaints.filter(
-    (c) => c.sentiment === 'NEGATIVE' || (c.sentiment_score !== null && c.sentiment_score < -0.3)
+    (c) => c.sentiment === 'negative' || (c.sentiment_score !== null && c.sentiment_score < -0.3)
   ).length;
+  const high_severity_complaint_count = complaints.filter(
+    (c) => (c.priority && ['HIGH', 'CRITICAL'].includes(c.priority.toUpperCase())) ||
+           (c.severity && ['high', 'critical'].includes(c.severity.toLowerCase()))
+  ).length;
+  const recurring_issue_count = complaints.filter((c) => c.is_recurring).length;
+
+  // Count voice calls
+  const voiceTranscripts = await VoiceTranscript.find({ customer_id: customerId });
+  const voice_call_count = voiceTranscripts.length;
 
   // Count transactions & anomalies
   const transactions = await Transaction.find({ customer_id: customerId });
@@ -48,7 +54,12 @@ async function buildCustomerFeatures(customerId, customer, loan) {
     complaint_count,
     negative_sentiment_count,
     transaction_count,
-    transaction_anomaly_count
+    transaction_anomaly_count,
+    // Extended NLP & behavioral features
+    high_severity_complaint_count,
+    recurring_issue_count,
+    voice_call_count,
+    avg_complaint_resolution_time: 24
   };
 }
 
@@ -96,7 +107,7 @@ export const simulateEmiFailure = async (req, res) => {
     await loan.save();
 
     // 5. Create BankingEvent
-    const bankingEvent = await BankingEvent.create({
+    await BankingEvent.create({
       event_id: generateId('EVT-EMI'),
       customer_id: customerId,
       event_type: 'EMI_PAYMENT_FAILED',
@@ -113,10 +124,10 @@ export const simulateEmiFailure = async (req, res) => {
     // 6. Collect current customer + loan features
     const features = await buildCustomerFeatures(customerId, customer, loan);
 
-    // 7. Send features to FastAPI & 8. Receive XGBoost prediction
+    // 7. Send features to FastAPI & 8. Receive XGBoost + SHAP prediction
     let predictionResult;
     try {
-      predictionResult = await aiService.predictDefaultRisk(features);
+      predictionResult = await aiService.analyzeCustomerRisk(customerId, features);
     } catch (aiErr) {
       logger.warn(`AI service call failed during EMI simulation: ${aiErr.message}`);
       return res.status(503).json({
@@ -126,18 +137,26 @@ export const simulateEmiFailure = async (req, res) => {
     }
 
     // 9. Create RiskEvent
-    const riskEvent = await RiskEvent.create({
+    await RiskEvent.create({
       event_id: generateId('RISK-EVT'),
       customer_id: customerId,
-      risk_score: predictionResult.risk_score,
-      risk_level: predictionResult.risk_level,
-      default_probability: predictionResult.default_probability,
+      risk_score: predictionResult.current_risk.score,
+      risk_level: predictionResult.current_risk.level,
+      default_probability: predictionResult.future_default_probability,
+      future_probability: predictionResult.future_default_probability,
       trigger_event: 'EMI_PAYMENT_FAILED',
-      features,
+      event_type: 'EMI_PAYMENT_FAILED',
+      important_risk_signals: predictionResult.important_risk_signals || [],
+      recommendations: predictionResult.recommendations || [],
+      features: {
+        ...features,
+        important_risk_signals: predictionResult.important_risk_signals,
+        recommendations: predictionResult.recommendations
+      },
       timestamp: new Date()
     });
 
-    // 10. Return updated risk
+    // 10. Return updated risk (Preserving Step 3 contract + Step 4 enhancements)
     return res.status(200).json({
       success: true,
       customer_id: customerId,
@@ -145,10 +164,14 @@ export const simulateEmiFailure = async (req, res) => {
         event_type: 'EMI_PAYMENT_FAILED'
       },
       risk: {
-        risk_score: predictionResult.risk_score,
-        risk_level: predictionResult.risk_level,
-        default_probability: predictionResult.default_probability
-      }
+        risk_score: predictionResult.current_risk.score,
+        risk_level: predictionResult.current_risk.level,
+        default_probability: predictionResult.future_default_probability,
+        future_probability: predictionResult.future_default_probability,
+        important_risk_signals: predictionResult.important_risk_signals || [],
+        recommendations: predictionResult.recommendations || []
+      },
+      recommendations: predictionResult.recommendations || []
     });
   } catch (error) {
     logger.error(`Error in simulateEmiFailure: ${error.message}`);
@@ -181,7 +204,6 @@ export const simulateTransaction = async (req, res) => {
       });
     }
 
-    // 1. Find customer
     const customer = await Customer.findOne({ customer_id: customerId });
     if (!customer) {
       return res.status(404).json({
@@ -190,11 +212,9 @@ export const simulateTransaction = async (req, res) => {
       });
     }
 
-    // 2. Calculate transaction behavioral features for Isolation Forest
     const now = new Date();
     const hourOfDay = now.getHours();
 
-    // Query past transactions for this customer to calculate frequency
     const pastTxCount = await Transaction.countDocuments({ customer_id: customerId });
     const locationFrequency = await Transaction.countDocuments({ customer_id: customerId, location }) || 1;
     const deviceFrequency = await Transaction.countDocuments({ customer_id: customerId, device_id }) || 1;
@@ -207,7 +227,6 @@ export const simulateTransaction = async (req, res) => {
       device_frequency: deviceFrequency
     };
 
-    // 3. Call FastAPI anomaly endpoint
     let anomalyResult;
     try {
       anomalyResult = await aiService.detectTransactionAnomaly(txFeatures);
@@ -219,7 +238,6 @@ export const simulateTransaction = async (req, res) => {
       });
     }
 
-    // 4. Save transaction with anomaly flags
     const transaction = await Transaction.create({
       transaction_id: generateId('TXN'),
       customer_id: customerId,
@@ -235,7 +253,6 @@ export const simulateTransaction = async (req, res) => {
       anomaly_score: anomalyResult.anomaly_score
     });
 
-    // 5. Create BankingEvent
     await BankingEvent.create({
       event_id: generateId('EVT-TXN'),
       customer_id: customerId,
@@ -250,7 +267,6 @@ export const simulateTransaction = async (req, res) => {
       timestamp: now
     });
 
-    // 6. Return response
     return res.status(200).json({
       success: true,
       transaction: {
@@ -273,6 +289,168 @@ export const simulateTransaction = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Internal Server Error during transaction simulation'
+    });
+  }
+};
+
+/**
+ * POST /api/simulate/complaint/:customerId
+ * Realtime Complaint Grievance Event
+ */
+export const simulateComplaint = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Complaint text is required'
+      });
+    }
+
+    const customer = await Customer.findOne({ customer_id: customerId });
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: `Customer ${customerId} not found`
+      });
+    }
+
+    const loan = await Loan.findOne({ customer_id: customerId });
+    if (!loan) {
+      return res.status(404).json({
+        success: false,
+        message: `No loan found for customer ${customerId}`
+      });
+    }
+
+    // 1. Call NLP analysis
+    let nlpResult;
+    try {
+      nlpResult = await aiService.analyzeComplaint(text);
+    } catch (aiErr) {
+      logger.warn(`AI service call failed during complaint NLP: ${aiErr.message}`);
+      return res.status(503).json({
+        success: false,
+        message: `AI service unavailable: ${aiErr.message}`
+      });
+    }
+
+    // 2. Fetch past complaints to detect recurring issues using SBERT
+    const pastComplaints = await Complaint.find({ customer_id: customerId });
+    let recurringResult = {
+      is_recurring: false,
+      similarity_score: 0.0,
+      related_issue: 'None',
+      matched_complaint: ''
+    };
+
+    if (pastComplaints.length > 0) {
+      try {
+        const pastDescriptions = pastComplaints.map((c) => c.description).filter(Boolean);
+        if (pastDescriptions.length > 0) {
+          recurringResult = await aiService.detectRecurringIssue(text, pastDescriptions);
+        }
+      } catch (sbertErr) {
+        logger.warn(`SBERT recurring issue check failed: ${sbertErr.message}`);
+      }
+    }
+
+    // 3. Save Complaint in MongoDB
+    const complaint = await Complaint.create({
+      complaint_id: generateId('CMP'),
+      customer_id: customerId,
+      category: nlpResult.category,
+      description: text,
+      status: 'OPEN',
+      priority: nlpResult.severity.toUpperCase(),
+      severity: nlpResult.severity,
+      sentiment: nlpResult.sentiment,
+      sentiment_score: nlpResult.sentiment === 'negative' ? -0.85 : (nlpResult.sentiment === 'positive' ? 0.8 : 0.0),
+      keywords: nlpResult.keywords,
+      is_recurring: recurringResult.is_recurring,
+      similarity_score: recurringResult.similarity_score,
+      related_issue: recurringResult.related_issue,
+      created_at: new Date()
+    });
+
+    // 4. Create BankingEvent
+    await BankingEvent.create({
+      event_id: generateId('EVT-CMP'),
+      customer_id: customerId,
+      event_type: 'COMPLAINT_CREATED',
+      source: 'CUSTOMER_SERVICE_DESK',
+      amount: 0,
+      metadata: {
+        complaint_id: complaint.complaint_id,
+        category: nlpResult.category,
+        sentiment: nlpResult.sentiment,
+        severity: nlpResult.severity,
+        keywords: nlpResult.keywords,
+        is_recurring: recurringResult.is_recurring,
+        similarity_score: recurringResult.similarity_score
+      },
+      timestamp: new Date()
+    });
+
+    // 5. Update customer features & recompute unified risk
+    const features = await buildCustomerFeatures(customerId, customer, loan);
+    const riskResult = await aiService.analyzeCustomerRisk(customerId, features);
+
+    // 6. Record updated RiskEvent
+    await RiskEvent.create({
+      event_id: generateId('RISK-EVT'),
+      customer_id: customerId,
+      risk_score: riskResult.current_risk.score,
+      risk_level: riskResult.current_risk.level,
+      default_probability: riskResult.future_default_probability,
+      future_probability: riskResult.future_default_probability,
+      trigger_event: 'COMPLAINT_CREATED',
+      event_type: 'COMPLAINT_CREATED',
+      important_risk_signals: riskResult.important_risk_signals || [],
+      recommendations: riskResult.recommendations || [],
+      features: {
+        ...features,
+        important_risk_signals: riskResult.important_risk_signals,
+        recommendations: riskResult.recommendations
+      },
+      timestamp: new Date()
+    });
+
+    return res.status(200).json({
+      success: true,
+      customer_id: customerId,
+      complaint_analysis: {
+        category: nlpResult.category,
+        sentiment: nlpResult.sentiment,
+        severity: nlpResult.severity,
+        keywords: nlpResult.keywords,
+        recurring: recurringResult
+      },
+      complaint: {
+        complaint_id: complaint.complaint_id,
+        category: nlpResult.category,
+        sentiment: nlpResult.sentiment,
+        severity: nlpResult.severity,
+        keywords: nlpResult.keywords
+      },
+      recurring_issue: recurringResult,
+      risk: {
+        risk_score: riskResult.current_risk.score,
+        risk_level: riskResult.current_risk.level,
+        default_probability: riskResult.future_default_probability,
+        future_probability: riskResult.future_default_probability,
+        important_risk_signals: riskResult.important_risk_signals || [],
+        recommendations: riskResult.recommendations || []
+      },
+      recommendations: riskResult.recommendations || []
+    });
+  } catch (error) {
+    logger.error(`Error in simulateComplaint: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Internal Server Error during complaint simulation'
     });
   }
 };

@@ -39,6 +39,32 @@ FEATURE_DEFAULTS: Dict[str, float] = {
     "transaction_anomaly_count": 0.0
 }
 
+FEATURE_ALIASES: Dict[str, str] = {
+    "income": "monthly_income",
+    "payment_delay_count": "emi_delay_count",
+    "recent_complaints_count": "complaint_count",
+    "unusual_transaction_count": "transaction_anomaly_count"
+}
+
+EXTENDED_FEATURE_COLUMNS: List[str] = [
+    "complaint_count",
+    "negative_sentiment_count",
+    "high_severity_complaint_count",
+    "recurring_issue_count",
+    "avg_complaint_resolution_time",
+    "voice_call_count"
+]
+
+def normalize_feature_aliases(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalizes incoming feature keys from request payloads to standard model features."""
+    normalized = dict(data)
+    for alias, target in FEATURE_ALIASES.items():
+        if alias in normalized and target not in normalized:
+            normalized[target] = normalized[alias]
+    if "payment_delay_count" in normalized and "previous_payment_delays" not in normalized:
+        normalized["previous_payment_delays"] = normalized["payment_delay_count"]
+    return normalized
+
 def extract_features(raw_data: Union[Dict[str, Any], pd.DataFrame]) -> pd.DataFrame:
     """
     Extracts, cleans, and validates features for XGBoost prediction.
@@ -46,9 +72,15 @@ def extract_features(raw_data: Union[Dict[str, Any], pd.DataFrame]) -> pd.DataFr
     Returns a validated pandas DataFrame with exactly FEATURE_COLUMNS in order.
     """
     if isinstance(raw_data, dict):
-        df = pd.DataFrame([raw_data])
+        normalized_data = normalize_feature_aliases(raw_data)
+        df = pd.DataFrame([normalized_data])
     elif isinstance(raw_data, pd.DataFrame):
         df = raw_data.copy()
+        for alias, target in FEATURE_ALIASES.items():
+            if alias in df.columns and target not in df.columns:
+                df[target] = df[alias]
+        if "payment_delay_count" in df.columns and "previous_payment_delays" not in df.columns:
+            df["previous_payment_delays"] = df["payment_delay_count"]
     else:
         raise ValueError(f"Unsupported data type: {type(raw_data)}. Expected dict or DataFrame.")
 

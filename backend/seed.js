@@ -6,11 +6,13 @@ import Transaction from './models/Transaction.js';
 import Complaint from './models/Complaint.js';
 import BankingEvent from './models/BankingEvent.js';
 import RiskEvent from './models/RiskEvent.js';
+import VoiceTranscript from './models/VoiceTranscript.js';
+import WhatIfScenario from './models/WhatIfScenario.js';
 import { logger } from './utils/logger.js';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/banking_ai';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/banking_ai';
 
 const seedDatabase = async () => {
   try {
@@ -25,7 +27,9 @@ const seedDatabase = async () => {
       Transaction.deleteMany({}),
       Complaint.deleteMany({}),
       BankingEvent.deleteMany({}),
-      RiskEvent.deleteMany({})
+      RiskEvent.deleteMany({}),
+      VoiceTranscript.deleteMany({}),
+      WhatIfScenario.deleteMany({})
     ]);
     logger.info('Cleared existing collections.');
 
