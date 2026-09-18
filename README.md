@@ -1,299 +1,269 @@
 # AI-Powered Early Warning & Decision Intelligence System for Banking
 
-> **24-Hour Hackathon Starter Project**  
-> A proactive, multi-agent financial risk intelligence platform designed to detect loan delinquency weeks before first default, flag transaction anomalies, analyze customer grievances via FinBERT sentiment, and prescribe actionable mitigations.
+> **24-Hour Hackathon Prototype**  
+> A proactive, event-driven banking intelligence system that detects loan delinquency and predicts defaults before they occur, flags transaction anomalies in real-time, and continuously maintains borrower risk profiles.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ 1. System Architecture
 
-The system is structured as three decoupled, independently runnable services:
-
-1. **Frontend (`frontend/`)**: React.js 18 + Vite + Tailwind CSS + Recharts + Axios
-2. **Backend API (`backend/`)**: Node.js + Express.js + MongoDB/Mongoose
-3. **AI & Decision Intelligence (`ai-service/`)**: Python 3.10+ + FastAPI + Scikit-learn + XGBoost + SHAP + Transformers + Whisper
+The system operates as an event-driven decoupled architecture connecting core banking event simulators to machine learning inference engines:
 
 ```
-                               ┌─────────────────────────┐
-                               │   Frontend (React/Vite) │
-                               │   http://localhost:5173 │
-                               └────────────┬────────────┘
-                                            │ HTTP / REST
-                                            ▼
-                               ┌─────────────────────────┐
-                               │  Backend (Node/Express) │
-                               │  http://localhost:5000  │
-                               └───────┬──────────┬──────┘
-                                       │          │
-                     Mongoose / MongoDB│          │ HTTP (Axios Proxy)
-                                       ▼          ▼
-                        ┌──────────────────┐  ┌─────────────────────────┐
-                        │ MongoDB Database │  │ AI Service (FastAPI)    │
-                        │ Port: 27017      │  │ http://localhost:8000  │
-                        └──────────────────┘  └───────────┬─────────────┘
-                                                          │
-                                         ┌────────────────┴───────────────┐
-                                         │  Multi-Agent Decision Engine   │
-                                         │  - Risk Agent (XGBoost)        │
-                                         │  - Prediction Agent (PD / DPD) │
-                                         │  - Explanation Agent (SHAP)    │
-                                         │  - Recommendation Agent        │
-                                         │  - What-If Simulation Agent    │
-                                         │  - FinBERT NLP & Whisper Voice │
-                                         └────────────────────────────────┘
-```
-
----
-
-## 📂 Project Structure
-
-```text
-banking-ai-early-warning/
-│
-├── frontend/                     # React.js + Vite + Tailwind CSS client
-│   ├── public/                   # Static assets
-│   ├── src/
-│   │   ├── components/           # Reusable UI components (Header, AgentCard, etc.)
-│   │   ├── pages/                # Page views (Dashboard, Borrower Profile, etc.)
-│   │   ├── services/             # Axios API clients for Backend & AI Service
-│   │   ├── hooks/                # Custom React hooks (useHealthCheck)
-│   │   ├── utils/                # Formatting & utility functions
-│   │   ├── App.jsx               # Root application component
-│   │   ├── index.css             # Tailwind CSS directives & theme styles
-│   │   └── main.jsx              # Vite application entrypoint
-│   ├── .env.example              # Frontend environment template
-│   ├── Dockerfile                # Frontend container definition
-│   ├── index.html                # HTML template with Inter font
-│   ├── package.json              # Frontend npm dependencies
-│   ├── postcss.config.js         # PostCSS configuration for Tailwind
-│   ├── tailwind.config.js        # Tailwind CSS theme & tokens
-│   └── vite.config.js            # Vite build & dev server configuration
-│
-├── backend/                      # Node.js + Express.js API server
-│   ├── controllers/              # Route controllers (health, customer, risk)
-│   │   ├── healthController.js   # Health check handler
-│   │   ├── customerController.js # Customer portfolio handler stub
-│   │   └── riskController.js     # Early warning risk trigger handler stub
-│   ├── routes/                   # Express route definitions
-│   │   ├── healthRoutes.js       # /api/health endpoint
-│   │   ├── customerRoutes.js     # /api/customers endpoints
-│   │   └── riskRoutes.js         # /api/risks endpoints
-│   ├── models/                   # Mongoose database schemas
-│   │   ├── Customer.js           # Customer profile & risk status model
-│   │   ├── Loan.js               # Loan facility & delinquency tracking model
-│   │   └── Alert.js              # Early warning risk alert model
-│   ├── middleware/               # Express middleware (error & 404 handlers)
-│   │   └── errorMiddleware.js
-│   ├── services/                 # Business logic & upstream microservice proxies
-│   │   └── aiClientService.js    # Axios client for FastAPI communication
-│   ├── utils/                    # Shared backend utilities
-│   │   ├── db.js                 # Non-blocking MongoDB connection
-│   │   └── logger.js             # Formatted terminal logger
-│   ├── .env.example              # Backend environment template
-│   ├── Dockerfile                # Backend container definition
-│   ├── package.json              # Backend npm dependencies
-│   └── server.js                 # Express server entrypoint
-│
-├── ai-service/                   # Python + FastAPI decision intelligence service
-│   ├── agents/                   # Modular decision intelligence agents
-│   │   ├── __init__.py           # Agent package documentation
-│   │   ├── risk_agent.py         # Composite risk & early warning scoring
-│   │   ├── prediction_agent.py   # DPD & default probability forecasting
-│   │   ├── explanation_agent.py  # SHAP feature attribution & audit narrative
-│   │   ├── recommendation_agent.py # Restructuring & proactive interventions
-│   │   └── whatif_agent.py       # Stress testing & counterfactual simulations
-│   ├── models/                   # ML / statistical model wrappers
-│   │   ├── __init__.py           # Models package documentation
-│   │   ├── risk_model.py         # Supervised tabular classifier (XGBoost stub)
-│   │   ├── prediction_model.py   # Time-to-default regression stub
-│   │   └── anomaly_model.py      # Unsupervised transaction anomaly detector
-│   ├── services/                 # Supporting intelligence pipelines
-│   │   ├── __init__.py           # Services package documentation
-│   │   ├── nlp_service.py        # FinBERT sentiment analysis on complaints
-│   │   ├── voice_service.py      # OpenAI Whisper speech-to-text pipeline
-│   │   └── feature_service.py    # Multi-source feature vector aggregator
-│   ├── utils/                    # AI service utilities
-│   │   ├── __init__.py
-│   │   └── config.py             # Pydantic / dotenv environment settings
-│   ├── .env.example              # AI Service environment template
-│   ├── Dockerfile                # AI Service container definition
-│   ├── main.py                   # FastAPI application & /health endpoint
-│   └── requirements.txt          # Python ML/NLP/STT dependencies
-│
-├── data/                         # Sample banking datasets for training & demos
-│   ├── customers.csv             # Demographics, income, credit scores
-│   ├── loans.csv                 # Loan balances, interest rates, DPD, status
-│   ├── transactions.csv          # Cashflows, debits, anomaly flags
-│   └── complaints.csv            # Customer grievances for FinBERT NLP
-│
-├── .gitignore                    # Git ignore for Node, Python, models, logs
-├── docker-compose.yml            # Multi-service local orchestrator
-└── README.md                     # Project documentation & run guide
+┌────────────────────────────────────────────────────────────────────────┐
+│                         Core Banking Events                            │
+│  - EMI Payment Failures                                                │
+│  - Overdue Balances                                                    │
+│  - Unusual Transactions                                                │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   Node.js + Express Backend API (:5000)                │
+│  - Realtime Event Ingestion (/api/simulate/emi-failure/:customerId)    │
+│  - Behavioral Anomaly Ingestion (/api/simulate/transaction/:customerId)│
+│  - Customer Risk State Ledger (/api/risk/:customerId)                  │
+│  - MongoDB Mongoose Schemas (customers, loans, transactions, events)   │
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │                                │
+                    ▼                                ▼
+       ┌────────────────────────┐       ┌────────────────────────┐
+       │   MongoDB Database     │       │ FastAPI ML API (:8000) │
+       │   database: banking_ai │       │ - POST /predict/...    │
+       │   Port: 27017          │       │ - POST /detect/...     │
+       └────────────────────────┘       └────────────┬───────────┘
+                                                     │
+                                    ┌────────────────┴───────────────────┐
+                                    │  Trained Machine Learning Models   │
+                                    │  1. XGBoost Default Classifier     │
+                                    │     (Stratified AUC: 0.9306)       │
+                                    │  2. Isolation Forest Detector      │
+                                    │     (Contamination: 0.05)          │
+                                    └────────────────────────────────────┘
 ```
 
 ---
 
-## ⚡ Quick Start: Prerequisites
+## 🗄️ 2. MongoDB Database & Schemas
 
-- **Node.js**: v18.0+ or v20+ (`node -v`)
-- **npm**: v9.0+ (`npm -v`)
-- **Python**: v3.10+ or v3.11+ (`python --version`)
-- *(Optional)* **MongoDB**: Local MongoDB community server or MongoDB Atlas
-- *(Optional)* **Docker & Docker Compose**: For containerized single-command execution
+- **Database Name**: `banking_ai`
+- **Port**: `27017`
+
+### Collections:
+1. `customers`: Customer demographic profiles, credit scores, monthly income, employment types.
+2. `loans`: Loan amounts, monthly EMI, outstanding balance, overdue amount, EMI delay counts, status (`CURRENT`, `WATCHLIST`, `DELINQUENT`).
+3. `transactions`: Transaction streams, payment methods, merchant categories, anomaly decision flags (`is_anomaly`, `anomaly_score`).
+4. `complaints`: Customer grievances, categories, priority, and sentiment logs.
+5. `banking_events`: Immutable audit trail of realtime events (`EMI_PAYMENT_SUCCESS`, `EMI_PAYMENT_FAILED`, `TRANSACTION_COMPLETED`, etc.).
+6. `risk_events`: Historical risk snapshots tracking dynamic XGBoost default probabilities and risk levels (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
 
 ---
 
-## 📦 Step 1: Install Dependencies
+## 📦 3. Installation Guide
 
-Open 3 terminal tabs to install dependencies for each service:
-
-### 1. Frontend Dependencies
-```bash
-cd frontend
-npm install
-```
-
-### 2. Backend Dependencies
+### Backend (Node.js)
 ```bash
 cd backend
 npm install
 ```
 
-### 3. AI Service Dependencies
+### AI Service (Python)
 ```bash
 cd ai-service
-
-# Create a Python virtual environment (recommended)
+# Recommended: create virtual environment
 python -m venv venv
 
-# Activate virtual environment:
-# On Windows:
+# Windows:
 venv\Scripts\activate
-# On macOS/Linux:
+# macOS/Linux:
 # source venv/bin/activate
 
-# Install Python requirements
 pip install -r requirements.txt
 ```
 
 ---
 
-## ⚙️ Step 2: Environment Variables Setup
+## ⚙️ 4. MongoDB Configuration
 
-Create `.env` files from the provided templates:
-
-### Backend:
-```bash
-cd backend
-# Windows:
-copy .env.example .env
-# macOS/Linux:
-# cp .env.example .env
-```
-Default `backend/.env`:
+Ensure MongoDB is running locally or provide a connection string in `backend/.env`:
 ```env
 PORT=5000
 NODE_ENV=development
-MONGO_URI=mongodb://localhost:27017/banking_early_warning
+MONGO_URI=mongodb://localhost:27017/banking_ai
 AI_SERVICE_URL=http://localhost:8000
 CLIENT_URL=http://localhost:5173
 ```
 
-### AI Service:
+### Seed Synthetic Demo Data
+Populate MongoDB with 10 demo customers (including main test customer `C001`), 10 loans, 21 transactions, and 10 complaints:
 ```bash
-cd ai-service
-# Windows:
-copy .env.example .env
-# macOS/Linux:
-# cp .env.example .env
-```
-Default `ai-service/.env`:
-```env
-PORT=8000
-HOST=0.0.0.0
-ENV=development
-BACKEND_URL=http://localhost:5000/api
-```
-
-### Frontend:
-```bash
-cd frontend
-# Windows:
-copy .env.example .env
-# macOS/Linux:
-# cp .env.example .env
-```
-Default `frontend/.env`:
-```env
-VITE_BACKEND_URL=http://localhost:5000/api
-VITE_AI_SERVICE_URL=http://localhost:8000
+cd backend
+npm run seed
+# or: node seed.js
 ```
 
 ---
 
-## 🚀 Step 3: Running the Services Independently
+## 🤖 5. ML Models & Training
 
-Each service can run independently without depending on the others being active.
+### 1. Synthetic Dataset (`data/training_data.csv`)
+Generate 1,500 realistic borrower records with realistic non-linear risk correlations:
+```bash
+python data/generate_dataset.py
+```
 
-### 1. Run AI Service (FastAPI)
+### 2. Train Models (XGBoost + Isolation Forest)
+Run the dedicated training script:
 ```bash
 cd ai-service
-# (Ensure your venv is activated if created)
-uvicorn main:app --reload --port 8000 --host 0.0.0.0
+python train_models.py
 ```
-- **Service URL**: `http://localhost:8000`
-- **Swagger Docs**: `http://localhost:8000/docs`
-- **Health Check**: `http://localhost:8000/health`
+- **XGBoost Classifier**: Saved to `ai-service/saved_models/xgboost_default_model.json`
+  - Accuracy: **0.8833**
+  - Precision: **0.7642**
+  - Recall: **0.8901**
+  - F1-Score: **0.8223**
+  - ROC-AUC: **0.9306**
+- **Isolation Forest Model**: Saved to `ai-service/saved_models/isolation_forest.pkl`
+  - Contamination: **0.05**
 
-### 2. Run Backend (Node.js + Express)
+---
+
+## 🚀 6. Starting the Services
+
+### Terminal 1: Start FastAPI ML Service
+```bash
+cd ai-service
+python -m uvicorn main:app --reload --port 8000
+```
+- Health URL: `http://localhost:8000/health`
+- Swagger UI: `http://localhost:8000/docs`
+
+### Terminal 2: Start Node.js Backend API
 ```bash
 cd backend
 npm run dev
 # or: npm start
 ```
-*Note: If MongoDB is not running locally, the server logs a notice and continues running in standalone mode.*
-- **Backend URL**: `http://localhost:5000`
-- **Health Check**: `http://localhost:5000/api/health`
+- Health URL: `http://localhost:5000/api/health`
 
-### 3. Run Frontend (React + Vite)
+---
+
+## 🌐 7. API Endpoints
+
+### AI Microservice (FastAPI — Port 8000)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Service health status |
+| `POST` | `/predict/default-risk` | XGBoost 90-day default probability & risk score |
+| `POST` | `/detect/transaction-anomaly` | Isolation Forest behavioral anomaly detection |
+
+### Backend API (Express.js — Port 5000)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Backend + MongoDB + AI microservice health check |
+| `GET` | `/api/customers` | Fetch all customers |
+| `GET` | `/api/customers/:customerId` | Comprehensive profile: loans, txns, complaints, events, latest risk |
+| `GET` | `/api/risk/:customerId` | Retrieve latest RiskEvent for a customer |
+| `GET` | `/api/events/customer/:customerId` | Historical banking event audit stream |
+| `POST` | `/api/simulate/emi-failure/:customerId` | Trigger EMI failure, increment overdue, run XGBoost, record RiskEvent |
+| `POST` | `/api/simulate/transaction/:customerId` | Ingest transaction, run Isolation Forest, record BankingEvent |
+
+---
+
+## 🧪 8. Example Realtime Demo Flow (Customer C001)
+
+### Baseline State:
+Customer `C001` starts with clean standing:
+- `credit_score`: 680
+- `monthly_income`: 50,000
+- `loan_amount`: 400,000
+- `monthly_emi`: 12,000
+- `overdue_amount`: 0
+- `emi_delay_count`: 0
+- `risk_score`: 5 (**LOW**)
+
+### Step 1: Simulate 1st EMI Payment Failure
 ```bash
-cd frontend
-npm run dev
+curl -X POST http://localhost:5000/api/simulate/emi-failure/C001
 ```
-- **Frontend Dashboard**: `http://localhost:5173`
+**Response:**
+```json
+{
+  "success": true,
+  "customer_id": "C001",
+  "event": {
+    "event_type": "EMI_PAYMENT_FAILED"
+  },
+  "risk": {
+    "risk_score": 42,
+    "risk_level": "MEDIUM",
+    "default_probability": 0.43
+  }
+}
+```
+*Result: Loan updated (`emi_delay_count = 1`, `overdue_amount = 12000`). Risk elevated from LOW to MEDIUM.*
 
----
-
-## 🐳 Alternative: Run Everything with Docker Compose
-
-To start MongoDB, Backend, AI Service, and Frontend with a single command:
-
+### Step 2: Simulate 2nd Consecutive EMI Failure
 ```bash
-docker compose up --build
+curl -X POST http://localhost:5000/api/simulate/emi-failure/C001
 ```
+**Response:**
+```json
+{
+  "success": true,
+  "customer_id": "C001",
+  "event": {
+    "event_type": "EMI_PAYMENT_FAILED"
+  },
+  "risk": {
+    "risk_score": 75,
+    "risk_level": "CRITICAL",
+    "default_probability": 0.75
+  }
+}
+```
+*Result: Loan updated (`emi_delay_count = 2`, `overdue_amount = 24000`). Risk elevated to CRITICAL.*
 
----
+### Step 3: Simulate Sudden Unusual Transaction Spike
+```bash
+curl -X POST http://localhost:5000/api/simulate/transaction/C001 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 95000,
+    "transaction_type": "PURCHASE",
+    "merchant_category": "ELECTRONICS",
+    "location": "Chennai",
+    "device_id": "DEVICE_NEW_01",
+    "payment_method": "CARD"
+  }'
+```
+**Response:**
+```json
+{
+  "success": true,
+  "transaction": {
+    "transaction_id": "TXN-...",
+    "customer_id": "C001",
+    "amount": 95000,
+    "merchant_category": "ELECTRONICS",
+    "location": "Chennai",
+    "is_anomaly": true,
+    "anomaly_score": -0.06
+  },
+  "anomaly": {
+    "is_anomaly": true,
+    "anomaly_score": -0.06
+  }
+}
+```
+*Result: Isolation Forest flags the transaction as unusual behaviour (`is_anomaly: true`, `anomaly_score: -0.06`).*
 
-## 🩺 API Health-Check Endpoints
+### Step 4: Verify Updated Risk State & Audit Events
+```bash
+# Check current risk score
+curl http://localhost:5000/api/risk/C001
 
-| Service | Protocol / Method | Health URL | Expected Status |
-|---|---|---|---|
-| **Node Backend** | `GET` | `http://localhost:5000/api/health` | `200 OK` (`{"status":"healthy", ...}`) |
-| **FastAPI AI Service** | `GET` | `http://localhost:8000/health` | `200 OK` (`{"status":"healthy", ...}`) |
-| **FastAPI Docs** | `GET` | `http://localhost:8000/docs` | Interactive OpenAPI Swagger UI |
-| **Frontend Web UI** | `GET` | `http://localhost:5173` | Interactive Dashboard with live status |
-
----
-
-## 🧠 AI Agent Roadmap (Upcoming Hackathon Phases)
-
-1. **Risk Agent (`ai-service/agents/risk_agent.py`)**  
-   Train XGBoost classifier on `data/customers.csv` and `data/loans.csv` to compute borrower risk ratings.
-2. **Prediction Agent (`ai-service/agents/prediction_agent.py`)**  
-   Implement time-series / survival analysis models to predict 30-day and 60-day default probabilities.
-3. **Explanation Agent (`ai-service/agents/explanation_agent.py`)**  
-   Compute TreeSHAP values for risk drivers and generate clear credit committee rationales.
-4. **Recommendation Agent (`ai-service/agents/recommendation_agent.py`)**  
-   Rule-based & optimization policy to recommend proactive restructuring, payment holidays, or RM contact.
-5. **What-If Agent (`ai-service/agents/whatif_agent.py`)**  
-   Simulation harness allowing credit managers to test macroeconomic interest rate / inflation shocks.
+# Inspect complete event timeline
+curl http://localhost:5000/api/events/customer/C001
+```

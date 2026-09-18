@@ -1,44 +1,61 @@
 import mongoose from 'mongoose';
 
 /**
- * Loan Data Model
- * Tracks exposure, installment status, and days past due (DPD) for early default detection.
+ * Loan Schema
+ * Collection: loans
  */
 const loanSchema = new mongoose.Schema(
   {
-    loanId: {
+    loan_id: {
       type: String,
       required: true,
       unique: true,
       index: true
     },
-    customerId: {
+    customer_id: {
       type: String,
       required: true,
-      ref: 'Customer',
       index: true
     },
-    loanType: {
+    loan_type: {
       type: String,
-      enum: ['Mortgage', 'Commercial', 'Personal', 'Auto', 'Working_Capital']
+      default: 'Personal'
     },
-    principalAmount: Number,
-    interestRate: Number,
-    termMonths: Number,
-    monthlyInstallment: Number,
-    outstandingBalance: Number,
-    daysPastDue: {
+    loan_amount: {
+      type: Number,
+      required: true
+    },
+    monthly_emi: {
+      type: Number,
+      required: true
+    },
+    outstanding_amount: {
+      type: Number,
+      required: true
+    },
+    overdue_amount: {
       type: Number,
       default: 0
     },
-    delinquencyStatus: {
+    emi_delay_count: {
+      type: Number,
+      default: 0
+    },
+    loan_status: {
       type: String,
-      enum: ['CURRENT', 'WATCHLIST', 'EARLY_DEFAULT', 'CRITICAL_RISK', 'NPA'],
       default: 'CURRENT'
+    },
+    start_date: {
+      type: Date,
+      default: Date.now
+    },
+    created_at: {
+      type: Date,
+      default: Date.now
     }
   },
   {
-    timestamps: true
+    collection: 'loans'
   }
 );
 

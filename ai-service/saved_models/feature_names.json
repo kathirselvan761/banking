@@ -1,0 +1,23 @@
+{
+  "feature_names": [
+    "credit_score",
+    "monthly_income",
+    "loan_amount",
+    "monthly_emi",
+    "outstanding_amount",
+    "overdue_amount",
+    "emi_delay_count",
+    "previous_payment_delays",
+    "complaint_count",
+    "negative_sentiment_count",
+    "transaction_count",
+    "transaction_anomaly_count"
+  ],
+  "metrics": {
+    "accuracy": 0.8833,
+    "precision": 0.7642,
+    "recall": 0.8901,
+    "f1": 0.8223,
+    "roc_auc": 0.9306
+  }
+}

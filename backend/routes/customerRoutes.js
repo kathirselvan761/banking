@@ -3,7 +3,10 @@ import { getCustomers, getCustomerById } from '../controllers/customerController
 
 const router = express.Router();
 
+// GET /api/customers
 router.get('/', getCustomers);
-router.get('/:id', getCustomerById);
+
+// GET /api/customers/:customerId
+router.get('/:customerId', getCustomerById);
 
 export default router;

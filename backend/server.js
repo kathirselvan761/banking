@@ -8,6 +8,8 @@ import { logger } from './utils/logger.js';
 import healthRoutes from './routes/healthRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import riskRoutes from './routes/riskRoutes.js';
+import simulationRoutes from './routes/simulationRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
 import { notFoundHandler, errorHandler } from './middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -31,7 +33,9 @@ connectDB();
 // API Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/customers', customerRoutes);
-app.use('/api/risks', riskRoutes);
+app.use('/api/risk', riskRoutes);
+app.use('/api/simulate', simulationRoutes);
+app.use('/api/events', eventRoutes);
 
 // Root Welcome Route
 app.get('/', (req, res) => {

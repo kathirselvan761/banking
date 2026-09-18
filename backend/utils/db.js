@@ -6,7 +6,7 @@ import { logger } from './logger.js';
  * Non-blocking: If MongoDB is offline, it logs a clear warning without crashing the server.
  */
 export const connectDB = async () => {
-  const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/banking_early_warning';
+  const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/banking_ai';
   
   try {
     const conn = await mongoose.connect(uri, {

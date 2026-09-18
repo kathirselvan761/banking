@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 
 /**
- * Customer Data Model
- * Stores profile, risk indicators, and credit rating attributes.
+ * Customer Schema
+ * Collection: customers
  */
 const customerSchema = new mongoose.Schema(
   {
-    customerId: {
+    customer_id: {
       type: String,
       required: true,
       unique: true,
@@ -16,27 +16,33 @@ const customerSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    age: Number,
-    employmentType: {
-      type: String,
-      enum: ['Salaried', 'Self-Employed', 'Business Owner', 'Freelance', 'Other']
-    },
-    annualIncome: Number,
-    creditScore: Number,
-    accountType: String,
-    accountBalance: Number,
-    riskCategory: {
-      type: String,
-      enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
-      default: 'LOW'
-    },
-    compositeRiskScore: {
+    age: {
       type: Number,
-      default: 0.0
+      required: true
+    },
+    monthly_income: {
+      type: Number,
+      required: true
+    },
+    credit_score: {
+      type: Number,
+      required: true
+    },
+    employment_type: {
+      type: String,
+      default: 'Salaried'
+    },
+    account_status: {
+      type: String,
+      default: 'ACTIVE'
+    },
+    created_at: {
+      type: Date,
+      default: Date.now
     }
   },
   {
-    timestamps: true
+    collection: 'customers'
   }
 );
 
