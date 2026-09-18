@@ -1,0 +1,6 @@
+transaction_id,customer_id,timestamp,amount,transaction_type,merchant_category,balance_after,is_flagged_anomaly
+TXN-8801,CUST-1001,2026-09-15T10:14:22Z,125.50,DEBIT,Groceries,12450.50,0
+TXN-8802,CUST-1002,2026-09-16T14:30:10Z,4500.00,DEBIT,Wire_Transfer,3200.00,1
+TXN-8803,CUST-1003,2026-09-17T03:15:45Z,1200.00,DEBIT,Casino_Gaming,450.25,1
+TXN-8804,CUST-1004,2026-09-17T11:05:19Z,85.20,DEBIT,Utilities,8900.00,0
+TXN-8805,CUST-1005,2026-09-18T08:22:01Z,15000.00,DEBIT,Offshore_Transfer,1250.80,1

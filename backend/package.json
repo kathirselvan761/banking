@@ -1,0 +1,32 @@
+{
+  "name": "banking-ai-backend",
+  "version": "1.0.0",
+  "description": "Backend API for AI-Powered Early Warning & Decision Intelligence System for Banking",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "banking",
+    "early-warning",
+    "risk-management",
+    "fintech",
+    "express",
+    "mongodb"
+  ],
+  "author": "Hackathon Team",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.4.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  }
+}

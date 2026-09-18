@@ -1,0 +1,6 @@
+customer_id,name,age,employment_type,annual_income,credit_score,account_type,account_balance,risk_category
+CUST-1001,Johnathan Doe,42,Salaried,85000,740,Checking,12450.50,LOW
+CUST-1002,Maria Fernandez,35,Self-Employed,62000,610,Business,3200.00,MEDIUM
+CUST-1003,Robert Sterling,58,Salaried,120000,530,Checking,450.25,HIGH
+CUST-1004,Sarah Jenkins,29,Freelance,48000,690,Savings,8900.00,LOW
+CUST-1005,Michael Chen,47,Business Owner,175000,580,Corporate,1250.80,HIGH

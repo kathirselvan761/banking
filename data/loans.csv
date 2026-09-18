@@ -1,0 +1,6 @@
+loan_id,customer_id,loan_type,principal_amount,interest_rate,term_months,monthly_installment,outstanding_balance,days_past_due,delinquency_status
+LOAN-901,CUST-1001,Mortgage,350000,4.25,360,1721.88,295000.00,0,CURRENT
+LOAN-902,CUST-1002,Commercial,75000,8.50,60,1539.12,42100.00,15,WATCHLIST
+LOAN-903,CUST-1003,Personal,30000,12.00,36,996.43,24800.00,45,EARLY_DEFAULT
+LOAN-904,CUST-1004,Auto,25000,5.75,48,584.28,14200.00,0,CURRENT
+LOAN-905,CUST-1005,Working_Capital,150000,9.75,48,3787.50,118500.00,62,CRITICAL_RISK

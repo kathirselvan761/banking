@@ -1,0 +1,27 @@
+# ==============================================================================
+# AI Service Dependencies - Banking Early Warning & Decision Intelligence
+# ==============================================================================
+
+# Web Framework & API Server
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+python-dotenv>=1.0.1
+
+# Tabular Machine Learning & Explainability
+scikit-learn>=1.5.0
+xgboost>=2.0.3
+shap>=0.45.1
+
+# Natural Language Processing & Sentiment (FinBERT, Sentence-BERT)
+transformers>=4.41.0
+sentence-transformers>=3.0.0
+torch>=2.2.0
+
+# Speech-to-Text for Customer Service Calls
+openai-whisper>=20231117
+
+# Data Processing & Utilities
+pandas>=2.2.2
+numpy>=1.26.4
+requests>=2.32.3

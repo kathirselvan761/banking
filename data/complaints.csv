@@ -1,0 +1,5 @@
+complaint_id,customer_id,timestamp,channel,complaint_text,category,sentiment_score,urgency_level,escalation_required
+CMP-501,CUST-1002,2026-09-12T11:20:00Z,Phone_Call,"I requested a loan term extension two weeks ago and received no response. My business cash flow is tight.",Loan_Servicing,-0.72,HIGH,1
+CMP-502,CUST-1003,2026-09-14T16:45:12Z,Web_Portal,"Excessive overdraft fees charged without warning. I cannot pay my monthly installment on time.",Fees_and_Charges,-0.89,CRITICAL,1
+CMP-503,CUST-1001,2026-09-15T09:10:30Z,Email,"Question about annual mortgage tax certificate statement.",General_Inquiry,0.15,LOW,0
+CMP-504,CUST-1005,2026-09-16T17:02:18Z,Relationship_Manager,"Supplier payments are delayed due to frozen credit line. Need urgent credit line review.",Credit_Facilities,-0.94,CRITICAL,1
