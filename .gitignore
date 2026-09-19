@@ -30,6 +30,7 @@ env/
 *.joblib
 *.pkl
 !ai-service/saved_models/*.pkl
+!backend/app/ml/saved_models/*.pkl
 models/weights/
 
 # Environment Variables & Secrets

@@ -4,41 +4,67 @@ import {
   LayoutDashboard,
   Users,
   ShieldAlert,
+  Cpu,
+  Layers,
+  Bot,
+  Sliders,
   CreditCard,
   MessageSquareWarning,
-  Cpu,
-  HelpCircle,
 } from 'lucide-react';
 
 export const Sidebar = () => {
   const navItems = [
     {
       to: '/dashboard',
-      label: 'Risk Dashboard',
+      label: 'Overview',
       icon: LayoutDashboard,
       badge: null,
     },
     {
       to: '/customers',
-      label: 'Customer Directory',
+      label: 'Customer Risk',
       icon: Users,
       badge: null,
     },
     {
+      to: '/explainability',
+      label: 'SHAP Explainability',
+      icon: Cpu,
+      badge: 'XAI',
+    },
+    {
+      to: '/recurring-issues',
+      label: 'Recurring Issues',
+      icon: Layers,
+      badge: 'SBERT',
+    },
+    {
       to: '/alerts',
-      label: 'High-Risk Alerts',
+      label: 'Risk Alerts',
       icon: ShieldAlert,
       badge: 'LIVE',
     },
     {
+      to: '/investigation',
+      label: 'Agent Investigation',
+      icon: Bot,
+      badge: 'LOOP',
+    },
+    {
+      to: '/what-if',
+      label: 'What-If Simulator',
+      icon: Sliders,
+      badge: null,
+    },
+    {
       to: '/transactions',
-      label: 'Transactions & Outliers',
+      label: 'Transactions & Anomaly',
       icon: CreditCard,
       badge: null,
     },
     {
       to: '/complaints',
-      label: 'Grievance Intelligence',
+      label: 'Complaints & NLP',
       icon: MessageSquareWarning,
       badge: null,
     },
@@ -49,7 +75,7 @@ export const Sidebar = () => {
       <div className="space-y-6">
         <div>
           <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Portfolio Navigation
+            Intelligence Architecture
           </span>
           <nav className="mt-2 space-y-1">
             {navItems.map((item) => {
@@ -59,19 +85,19 @@ export const Sidebar = () => {
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all group ${
+                    `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-sm shadow-sky-950/40'
+                        ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 shadow-sm'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                     }`
                   }
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
+                    <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-sky-300 border border-slate-700">
                       {item.badge}
                     </span>
                   )}
@@ -80,42 +106,19 @@ export const Sidebar = () => {
             })}
           </nav>
         </div>
-
-        {/* AI Engine Status Card */}
-        <div className="rounded-xl bg-slate-900/60 border border-slate-800 p-3.5 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-white">
-            <Cpu className="w-4 h-4 text-sky-400" />
-            <span>AI Intelligence Stack</span>
-          </div>
-          <div className="text-[11px] text-slate-400 space-y-1 font-mono">
-            <div className="flex justify-between">
-              <span>Risk Scoring:</span>
-              <span className="text-sky-300">XGBoost</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Explainability:</span>
-              <span className="text-indigo-300">TreeSHAP</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Sentiment:</span>
-              <span className="text-pink-300">FinBERT</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Anomalies:</span>
-              <span className="text-purple-300">IsoForest</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Footer information */}
-      <div className="pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-        <div className="flex items-center justify-between">
-          <span>Telemetry Protocol:</span>
-          <span className="text-slate-300 font-mono">v2.4.0</span>
+      <div className="p-3 rounded-xl bg-slate-900/50 border border-slate-800/60 space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-400 font-medium">Orchestration</span>
+          <span className="text-emerald-400 font-mono font-bold">FastAPI</span>
         </div>
-        <p className="text-[10px] text-slate-400 leading-tight">
-          Decision Intelligence Early Warning System
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-slate-400 font-medium">Agent Framework</span>
+          <span className="text-sky-400 font-mono font-bold">LangGraph</span>
+        </div>
+        <p className="text-[10px] text-slate-500 pt-1 border-t border-slate-800">
+          Decision Intelligence &bull; Human Final Approval
         </p>
       </div>
     </aside>
