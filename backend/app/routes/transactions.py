@@ -27,7 +27,8 @@ async def list_transactions(
     return {
         "status": "SUCCESS",
         "count": len(txs),
-        "transactions": txs
+        "transactions": txs,
+        "data": txs
     }
 
 @router.post("/anomaly-check")

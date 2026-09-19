@@ -29,7 +29,8 @@ async def list_alerts(
     return {
         "status": "SUCCESS",
         "count": len(alerts),
-        "alerts": alerts
+        "alerts": alerts,
+        "data": alerts
     }
 
 @router.patch("/{alert_id}/resolve")

@@ -28,7 +28,8 @@ async def list_complaints(
     return {
         "status": "SUCCESS",
         "count": len(comps),
-        "complaints": comps
+        "complaints": comps,
+        "data": comps
     }
 
 @router.post("/sentiment")

@@ -41,7 +41,8 @@ async def list_customers(
     return {
         "status": "SUCCESS",
         "count": len(results),
-        "customers": results
+        "customers": results,
+        "data": results
     }
 
 @router.get("/{customer_id}")
